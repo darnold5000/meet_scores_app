@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0f1d3a" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/static/icons/icon.svg" />
+    <link rel="stylesheet" href="/static/styles.css" />
+    <title>Gym Scores</title>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">GS</div>
+        <div class="brand-text">
+          <div class="brand-title">Gym Scores</div>
+          <div class="brand-subtitle">Mobile live meet viewer</div>
+        </div>
+      </div>
+      <a class="btn btn-primary" href="/meet/{{ meet_key }}">Open meet</a>
+    </header>
+
+    <main class="container">
+      <section class="card hero">
+        <h1>2026 IN Compulsory State Championships</h1>
+        <p class="muted">
+          Meet key: <span class="mono">{{ meet_key }}</span>
+        </p>
+        {% if meet %}
+        <div class="pill-row">
+          <span class="pill">{{ meet.name }}</span>
+          {% if meet.start_date %}<span class="pill">Starts: {{ meet.start_date }}</span>{% endif %}
+          {% if meet.location %}<span class="pill">{{ meet.location }}</span>{% endif %}
+        </div>
+        {% else %}
+        <p class="muted">Meet not found in DB yet. Run the `06` ingest for <span class="mono">MSO-36478</span>.</p>
+        {% endif %}
+      </section>
+
+      <section class="card">
+        <h2>How to refresh scores</h2>
+        <ol class="steps">
+          <li>Run the scraper/ingest in a normal terminal (outside Cursor sandbox)</li>
+          <li>Reload the meet page</li>
+        </ol>
+        <p class="muted small">
+          This app reads from your existing Postgres DB via <span class="mono">DATABASE_URL</span>.
+        </p>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
+

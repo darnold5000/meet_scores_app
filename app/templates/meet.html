@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0f1d3a" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/static/icons/icon.svg" />
+    <link rel="stylesheet" href="/static/styles.css" />
+    <title>Meet · {{ meet_key }}</title>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="btn btn-ghost" href="/">Back</a>
+      <div class="topbar-center">
+        <div class="topbar-title">Live Scores</div>
+        <div class="topbar-subtitle">{{ meet_key }}</div>
+      </div>
+      <button class="btn btn-primary" id="refreshBtn" type="button">Refresh</button>
+    </header>
+
+    <main class="container">
+      <section class="card filters">
+        <div class="filters-row">
+          <label class="field">
+            <span>Session</span>
+            <select id="sessionSel">
+              {% for s in sessions %}
+              <option value="{{ s }}" {% if selected.session == s %}selected{% endif %}>{{ s }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label class="field">
+            <span>Level</span>
+            <select id="levelSel">
+              {% for s in levels %}
+              <option value="{{ s }}" {% if selected.level == s %}selected{% endif %}>{{ s }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label class="field">
+            <span>Division</span>
+            <select id="divisionSel">
+              {% for s in divisions %}
+              <option value="{{ s }}" {% if selected.division == s %}selected{% endif %}>{{ s }}</option>
+              {% endfor %}
+            </select>
+          </label>
+        </div>
+        <div class="filters-row">
+          <label class="field grow">
+            <span>Search</span>
+            <input id="qInput" type="search" placeholder="Athlete or gym" value="{{ selected.q }}" />
+          </label>
+          <div class="field meta">
+            <span>Auto</span>
+            <label class="toggle">
+              <input id="autoToggle" type="checkbox" checked />
+              <span class="track"></span>
+            </label>
+          </div>
+        </div>
+        <div class="status-row">
+          <span id="statusText" class="muted small">
+            {% if latest %}Last scrape run #{{ latest.run_id }}{% else %}No local data yet{% endif %}
+          </span>
+          <span id="countText" class="pill"></span>
+        </div>
+      </section>
+
+      <section class="list" id="scoreList" aria-live="polite"></section>
+    </main>
+
+    <script>
+      window.__MEET_KEY__ = {{ meet_key|tojson }};
+      window.__INITIAL_DATA__ = {{ initial_data|tojson }};
+    </script>
+    <script src="/static/app.js"></script>
+  </body>
+</html>
+

@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+jinja2
+python-multipart
+pydantic
+sqlalchemy
+psycopg2-binary
+requests
+playwright
+beautifulsoup4
+lxml
+pandas
+streamlit
+streamlit-autorefresh
+altair==4.2.2
