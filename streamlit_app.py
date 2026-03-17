@@ -448,14 +448,15 @@ if view == "List":
         rows.append(row)
 
     df = pd.DataFrame(rows)
-    # `hide_index` isn't supported in all Streamlit versions (notably some Streamlit Cloud images).
-    # Use a Styler when available for broad compatibility.
-    table = df
-    try:
-        table = df.style.hide(axis="index")  # pandas >= 1.4
-    except Exception:
-        pass
-    st.dataframe(table, use_container_width=True, height=650)
+    # Streamlit uses Arrow for dataframes; some deployments choke on Arrow string types like LargeUtf8.
+    # Force plain Python objects/strings for broad frontend compatibility.
+    safe = df.copy()
+    for col in safe.columns:
+        if col == "Rank":
+            continue
+        safe[col] = safe[col].map(lambda v: "" if v is None else str(v))
+    safe = safe.reset_index(drop=True)
+    st.dataframe(safe, use_container_width=True, height=650)
 else:
     for idx, c in enumerate(cards_sorted, start=1):
         e_sel = c[event]
