@@ -367,67 +367,103 @@ st.markdown(
   }
 
   /* List/table view (HTML, no Arrow) */
-  .gs-table{
-    width: 100%;
-    border-collapse: collapse;
+  .gs-list{
+    display:flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .gs-row{
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    overflow: hidden;
-    box-shadow: 0 12px 30px rgba(2,6,23,0.06);
-  }
-  .gs-table thead th{
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    background: rgba(244,246,249,0.98);
-    color: var(--muted);
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    text-align: left;
+    box-shadow: 0 10px 24px rgba(2,6,23,0.06);
     padding: 10px 10px;
-    border-bottom: 1px solid var(--border);
-    white-space: nowrap;
   }
-  .gs-table tbody td{
-    padding: 9px 10px;
-    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
-    font-size: 0.9rem;
-    color: var(--text);
-    vertical-align: top;
-    white-space: nowrap;
+  .gs-row-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content: space-between;
+    gap: 10px;
   }
-  .gs-table tbody tr:last-child td{ border-bottom: none; }
-  .gs-table .muted{ color: var(--muted); font-weight: 700; font-size: 0.82rem; }
-  .gs-table .rank{
-    width: 40px;
-    font-weight: 950;
+  .gs-row-left{
+    display:flex;
+    align-items:flex-start;
+    gap: 10px;
+    min-width: 0;
+  }
+  .gs-rank-s{
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    background: rgba(225,29,46,0.14);
+    border: 1px solid rgba(225,29,46,0.35);
     color: var(--accent);
-  }
-  .gs-table .ath{
+    display:flex;
+    align-items:center;
+    justify-content:center;
     font-weight: 950;
-    max-width: 160px;
+    font-size: 0.78rem;
+    flex: 0 0 auto;
+  }
+  .gs-row-name{
+    font-weight: 950;
+    color: var(--text);
+    line-height: 1.05rem;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 260px;
   }
-  .gs-table .gym{
+  .gs-row-gym{
     color: var(--accent);
     font-weight: 850;
-    max-width: 160px;
+    font-size: 0.85rem;
+    margin-top: 3px;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 260px;
   }
-  .gs-table .scorecol{
-    text-align: right;
+  .gs-row-meta{
+    display:flex;
+    gap: 8px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+  .gs-row-right{
+    text-align:right;
+    flex: 0 0 auto;
+  }
+  .gs-row-score{
+    font-weight: 950;
+    color: var(--text);
+    font-size: 1.0rem;
+    line-height: 1.0rem;
     font-variant-numeric: tabular-nums;
-    width: 88px;
   }
-  .gs-table-wrap{
-    max-height: 70vh;
-    overflow: auto;
-    border-radius: var(--radius);
+  .gs-row-place{
+    color: var(--muted);
+    font-weight: 800;
+    font-size: 0.82rem;
+    margin-top: 4px;
   }
+  .gs-row-events{
+    display:flex;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .gs-evchip{
+    border-radius: 999px;
+    border: 1px solid rgba(148,163,184,0.22);
+    background: rgba(148,163,184,0.12);
+    padding: 5px 10px;
+    font-weight: 850;
+    font-size: 0.82rem;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .gs-evchip strong{ color: var(--muted); font-weight: 900; margin-right: 6px; }
 </style>
 """,
     unsafe_allow_html=True,
@@ -503,29 +539,41 @@ if view == "List":
             .replace('"', "&quot;")
         )
 
-    headers = ["#", "Athlete", "Gym", "Lvl", "Div"] + EVENTS
-    html = '<div class="gs-table-wrap"><table class="gs-table"><thead><tr>'
-    for h in headers:
-        cls = "scorecol" if h in EVENTS else ""
-        html += f'<th class="{cls}">{_cell(h)}</th>'
-    html += "</tr></thead><tbody>"
+    show_all = st.toggle("Show all events", value=False)
 
+    html = '<div class="gs-list">'
     for idx, c in enumerate(cards_sorted, start=1):
-        html += "<tr>"
-        html += f'<td class="rank">{idx}</td>'
-        html += f'<td class="ath">{_cell(c["athlete"])}</td>'
-        html += f'<td class="gym">{_cell(c["gym"])}</td>'
-        html += f'<td class="muted">{_cell(c["level"] or "—")}</td>'
-        html += f'<td class="muted">{_cell(c["division"] or "—")}</td>'
-        for ev in EVENTS:
-            e = c[ev]
-            s = _fmt_score(e.get("score"))
-            p = _fmt_place(e.get("place"))
-            val = f"{s} {p}".strip()
-            html += f'<td class="scorecol">{_cell(val)}</td>'
-        html += "</tr>"
+        e_sel = c[event]
+        score = _fmt_score(e_sel.get("score"))
+        place = _fmt_place(e_sel.get("place"))
+        html += '<div class="gs-row"><div class="gs-row-top">'
+        html += '<div class="gs-row-left">'
+        html += f'<div class="gs-rank-s">{idx}</div>'
+        html += '<div style="min-width:0;">'
+        html += f'<div class="gs-row-name">{_cell(c["athlete"])}</div>'
+        html += f'<div class="gs-row-gym">{_cell(c["gym"])}</div>'
+        html += '<div class="gs-row-meta">'
+        html += f'<span class="gs-chip">{_cell(c["level"] or "—")}</span>'
+        html += f'<span class="gs-chip">{_cell(c["division"] or "—")}</span>'
+        html += "</div></div></div>"
+        html += '<div class="gs-row-right">'
+        html += f'<div class="gs-row-score">{event} {_cell(score)}</div>'
+        html += f'<div class="gs-row-place">{_cell(place)}</div>'
+        html += "</div></div>"
 
-    html += "</tbody></table></div>"
+        if show_all:
+            html += '<div class="gs-row-events">'
+            for ev in EVENTS:
+                e = c[ev]
+                s = _fmt_score(e.get("score"))
+                p = _fmt_place(e.get("place"))
+                val = f"{s} {p}".strip()
+                html += f'<span class="gs-evchip"><strong>{ev}</strong>{_cell(val)}</span>'
+            html += "</div>"
+
+        html += "</div>"
+    html += "</div>"
+
     st.markdown(html, unsafe_allow_html=True)
 else:
     for idx, c in enumerate(cards_sorted, start=1):
