@@ -206,6 +206,15 @@ st.markdown(
   }
 
   /* tighter controls so Level/Div/Auto fit in one row on mobile */
+  div[data-testid="stHorizontalBlock"]{
+    flex-wrap: nowrap !important;
+    gap: 10px !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  div[data-testid="column"]{
+    min-width: 0 !important;
+  }
   [data-testid="stSelectbox"] [data-baseweb="select"] > div{
     padding-top: 2px !important;
     padding-bottom: 2px !important;
@@ -418,11 +427,11 @@ levels = ["All"] + _list_distinct(int(meet["id"]), "level")
 divisions = ["All"] + _list_distinct(int(meet["id"]), "division")
 f1, f2, f3 = st.columns([1.0, 1.35, 0.9])
 with f1:
-    level = st.selectbox("Level", levels, index=0)
+    level = st.selectbox("Lvl", levels, index=0, label_visibility="collapsed")
 with f2:
-    division = st.selectbox("Division", divisions, index=0)
+    division = st.selectbox("Div", divisions, index=0, label_visibility="collapsed")
 with f3:
-    auto = st.checkbox("Auto (20s)", value=True)
+    auto = st.checkbox("Auto", value=True, help="Refresh every 20 seconds")
 
 event = st.radio("Event", EVENTS, index=EVENTS.index("AA"), horizontal=True, label_visibility="collapsed")
 
