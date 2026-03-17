@@ -365,105 +365,6 @@ st.markdown(
     font-size: 0.88rem;
     margin: 2px 0 8px 0;
   }
-
-  /* List/table view (HTML, no Arrow) */
-  .gs-list{
-    display:flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .gs-row{
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: 0 10px 24px rgba(2,6,23,0.06);
-    padding: 10px 10px;
-  }
-  .gs-row-top{
-    display:flex;
-    align-items:flex-start;
-    justify-content: space-between;
-    gap: 10px;
-  }
-  .gs-row-left{
-    display:flex;
-    align-items:flex-start;
-    gap: 10px;
-    min-width: 0;
-  }
-  .gs-rank-s{
-    width: 24px;
-    height: 24px;
-    border-radius: 999px;
-    background: rgba(225,29,46,0.14);
-    border: 1px solid rgba(225,29,46,0.35);
-    color: var(--accent);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-weight: 950;
-    font-size: 0.78rem;
-    flex: 0 0 auto;
-  }
-  .gs-row-name{
-    font-weight: 950;
-    color: var(--text);
-    line-height: 1.05rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 260px;
-  }
-  .gs-row-gym{
-    color: var(--accent);
-    font-weight: 850;
-    font-size: 0.85rem;
-    margin-top: 3px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 260px;
-  }
-  .gs-row-meta{
-    display:flex;
-    gap: 8px;
-    margin-top: 6px;
-    flex-wrap: wrap;
-  }
-  .gs-row-right{
-    text-align:right;
-    flex: 0 0 auto;
-  }
-  .gs-row-score{
-    font-weight: 950;
-    color: var(--text);
-    font-size: 1.0rem;
-    line-height: 1.0rem;
-    font-variant-numeric: tabular-nums;
-  }
-  .gs-row-place{
-    color: var(--muted);
-    font-weight: 800;
-    font-size: 0.82rem;
-    margin-top: 4px;
-  }
-  .gs-row-events{
-    display:flex;
-    gap: 8px;
-    margin-top: 10px;
-    flex-wrap: wrap;
-  }
-  .gs-evchip{
-    border-radius: 999px;
-    border: 1px solid rgba(148,163,184,0.22);
-    background: rgba(148,163,184,0.12);
-    padding: 5px 10px;
-    font-weight: 850;
-    font-size: 0.82rem;
-    color: var(--text);
-    font-variant-numeric: tabular-nums;
-  }
-  .gs-evchip strong{ color: var(--muted); font-weight: 900; margin-right: 6px; }
 </style>
 """,
     unsafe_allow_html=True,
@@ -510,8 +411,6 @@ with f2:
 
 event = st.radio("Event", EVENTS, index=EVENTS.index("AA"), horizontal=True, label_visibility="collapsed")
 
-view = st.radio("View", ["Cards", "List"], index=0, horizontal=True, label_visibility="collapsed")
-
 st.markdown("</div></div>", unsafe_allow_html=True)
 
 auto = st.checkbox("Auto-refresh (20s)", value=True)
@@ -528,58 +427,9 @@ def _event_sort_key(c: dict) -> tuple:
 
 cards_sorted = sorted(cards, key=_event_sort_key)
 
-if view == "List":
-    # Render as HTML to avoid Arrow serialization issues on some Streamlit Cloud frontends.
-    def _cell(text: str) -> str:
-        return (
-            str(text)
-            .replace("&", "&amp;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
-            .replace('"', "&quot;")
-        )
-
-    # `st.toggle` isn't available on some Streamlit Cloud runtimes; use checkbox for compatibility.
-    show_all = st.checkbox("Show all events", value=False)
-
-    html = '<div class="gs-list">'
-    for idx, c in enumerate(cards_sorted, start=1):
-        e_sel = c[event]
-        score = _fmt_score(e_sel.get("score"))
-        place = _fmt_place(e_sel.get("place"))
-        html += '<div class="gs-row"><div class="gs-row-top">'
-        html += '<div class="gs-row-left">'
-        html += f'<div class="gs-rank-s">{idx}</div>'
-        html += '<div style="min-width:0;">'
-        html += f'<div class="gs-row-name">{_cell(c["athlete"])}</div>'
-        html += f'<div class="gs-row-gym">{_cell(c["gym"])}</div>'
-        html += '<div class="gs-row-meta">'
-        html += f'<span class="gs-chip">{_cell(c["level"] or "—")}</span>'
-        html += f'<span class="gs-chip">{_cell(c["division"] or "—")}</span>'
-        html += "</div></div></div>"
-        html += '<div class="gs-row-right">'
-        html += f'<div class="gs-row-score">{event} {_cell(score)}</div>'
-        html += f'<div class="gs-row-place">{_cell(place)}</div>'
-        html += "</div></div>"
-
-        if show_all:
-            html += '<div class="gs-row-events">'
-            for ev in EVENTS:
-                e = c[ev]
-                s = _fmt_score(e.get("score"))
-                p = _fmt_place(e.get("place"))
-                val = f"{s} {p}".strip()
-                html += f'<span class="gs-evchip"><strong>{ev}</strong>{_cell(val)}</span>'
-            html += "</div>"
-
-        html += "</div>"
-    html += "</div>"
-
-    st.markdown(html, unsafe_allow_html=True)
-else:
-    for idx, c in enumerate(cards_sorted, start=1):
-        e_sel = c[event]
-        html = f"""
+for idx, c in enumerate(cards_sorted, start=1):
+    e_sel = c[event]
+    html = f"""
 <div class="gs-card">
   <div class="gs-card-top">
     <div class="gs-ident">
@@ -600,19 +450,19 @@ else:
   </div>
   <div class="gs-scores">
 """
-        for ev in EVENTS:
-            e = c[ev]
-            sel = " sel" if ev == event else ""
-            html += f"""
+    for ev in EVENTS:
+        e = c[ev]
+        sel = " sel" if ev == event else ""
+        html += f"""
 <div class="gs-pill{sel}">
   <div class="gs-pill-ev">{ev}</div>
   <div class="gs-pill-score">{_fmt_score(e.get("score"))}</div>
   <div class="gs-pill-place">{_fmt_place(e.get("place"))}</div>
 </div>
 """
-        html += """
+    html += """
   </div>
 </div>
 """
-        st.markdown(dedent(html).strip(), unsafe_allow_html=True)
+    st.markdown(dedent(html).strip(), unsafe_allow_html=True)
 
