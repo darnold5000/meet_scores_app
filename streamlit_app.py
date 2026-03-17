@@ -6,6 +6,7 @@ from textwrap import dedent
 
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
+import pandas as pd
 
 from gym_scores.db import fetch_all, fetch_one
 
@@ -240,8 +241,8 @@ st.markdown(
     border-radius: var(--radius);
     border: 1px solid var(--border);
     box-shadow: 0 12px 30px rgba(2,6,23,0.06);
-    padding: 12px 12px 10px 12px;
-    margin: 10px 0;
+    padding: 10px 10px 8px 10px;
+    margin: 8px 0;
   }
   .gs-card-top{
     display:flex;
@@ -256,8 +257,8 @@ st.markdown(
     min-width: 0;
   }
   .gs-rank{
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     border-radius: 999px;
     background: var(--accent);
     color: white;
@@ -265,15 +266,7 @@ st.markdown(
     align-items:center;
     justify-content:center;
     font-weight: 900;
-    font-size: 0.85rem;
-    flex: 0 0 auto;
-  }
-  .gs-avatar{
-    width: 34px;
-    height: 34px;
-    border-radius: 999px;
-    background: linear-gradient(135deg, rgba(11,42,74,1) 0%, rgba(11,42,74,0.75) 100%);
-    box-shadow: 0 8px 18px rgba(11,42,74,0.18);
+    font-size: 0.78rem;
     flex: 0 0 auto;
   }
   .gs-name{
@@ -297,7 +290,7 @@ st.markdown(
   .gs-meta{
     display:flex;
     gap: 8px;
-    margin-top: 6px;
+    margin-top: 5px;
     flex-wrap: wrap;
   }
   .gs-chip{
@@ -315,7 +308,7 @@ st.markdown(
   }
   .gs-total-score{
     font-weight: 950;
-    font-size: 1.05rem;
+    font-size: 1.0rem;
     color: var(--text);
     line-height: 1.0rem;
   }
@@ -328,7 +321,7 @@ st.markdown(
   .gs-scores{
     display:flex;
     gap: 8px;
-    margin-top: 10px;
+    margin-top: 8px;
     justify-content:space-between;
   }
   .gs-pill{
@@ -336,7 +329,7 @@ st.markdown(
     border-radius: 14px;
     border: 1px solid var(--border);
     background: rgba(2,6,23,0.02);
-    padding: 8px 8px;
+    padding: 7px 6px;
     text-align:center;
     min-width: 0;
   }
@@ -419,6 +412,8 @@ with f2:
 
 event = st.radio("Event", EVENTS, index=EVENTS.index("AA"), horizontal=True, label_visibility="collapsed")
 
+view = st.radio("View", ["Cards", "List"], index=0, horizontal=True, label_visibility="collapsed")
+
 st.markdown("</div></div>", unsafe_allow_html=True)
 
 auto = st.checkbox("Auto-refresh (20s)", value=True)
@@ -435,14 +430,33 @@ def _event_sort_key(c: dict) -> tuple:
 
 cards_sorted = sorted(cards, key=_event_sort_key)
 
-for idx, c in enumerate(cards_sorted, start=1):
-    e_sel = c[event]
-    html = f"""
+if view == "List":
+    rows: list[dict] = []
+    for idx, c in enumerate(cards_sorted, start=1):
+        row = {
+            "Rank": idx,
+            "Athlete": c["athlete"],
+            "Gym": c["gym"],
+            "Level": c["level"] or "",
+            "Division": c["division"] or "",
+        }
+        for ev in EVENTS:
+            e = c[ev]
+            s = _fmt_score(e.get("score"))
+            p = _fmt_place(e.get("place"))
+            row[ev] = f"{s} {p}".strip()
+        rows.append(row)
+
+    df = pd.DataFrame(rows)
+    st.dataframe(df, use_container_width=True, hide_index=True, height=650)
+else:
+    for idx, c in enumerate(cards_sorted, start=1):
+        e_sel = c[event]
+        html = f"""
 <div class="gs-card">
   <div class="gs-card-top">
     <div class="gs-ident">
       <div class="gs-rank">{idx}</div>
-      <div class="gs-avatar"></div>
       <div style="min-width:0;">
         <div class="gs-name">{c["athlete"]}</div>
         <div class="gs-gym">{c["gym"]}</div>
@@ -459,20 +473,19 @@ for idx, c in enumerate(cards_sorted, start=1):
   </div>
   <div class="gs-scores">
 """
-    for ev in EVENTS:
-        e = c[ev]
-        sel = " sel" if ev == event else ""
-        # Important: keep tags unindented so Streamlit doesn't treat this as a Markdown code block.
-        html += f"""
+        for ev in EVENTS:
+            e = c[ev]
+            sel = " sel" if ev == event else ""
+            html += f"""
 <div class="gs-pill{sel}">
   <div class="gs-pill-ev">{ev}</div>
   <div class="gs-pill-score">{_fmt_score(e.get("score"))}</div>
   <div class="gs-pill-place">{_fmt_place(e.get("place"))}</div>
 </div>
 """
-    html += """
+        html += """
   </div>
 </div>
 """
-    st.markdown(dedent(html).strip(), unsafe_allow_html=True)
+        st.markdown(dedent(html).strip(), unsafe_allow_html=True)
 
