@@ -539,7 +539,8 @@ if view == "List":
             .replace('"', "&quot;")
         )
 
-    show_all = st.toggle("Show all events", value=False)
+    # `st.toggle` isn't available on some Streamlit Cloud runtimes; use checkbox for compatibility.
+    show_all = st.checkbox("Show all events", value=False)
 
     html = '<div class="gs-list">'
     for idx, c in enumerate(cards_sorted, start=1):
