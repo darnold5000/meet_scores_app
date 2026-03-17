@@ -205,6 +205,19 @@ st.markdown(
     border-radius: 999px !important;
   }
 
+  /* tighter controls so Level/Div/Auto fit in one row on mobile */
+  [data-testid="stSelectbox"] [data-baseweb="select"] > div{
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+    min-height: 38px !important;
+  }
+  [data-testid="stSelectbox"] [data-baseweb="select"]{
+    min-width: 0 !important;
+  }
+  [data-testid="stCheckbox"] label{
+    margin-bottom: 0 !important;
+  }
+
   /* Radio -> pills */
   div[role="radiogroup"]{
     display:flex;
@@ -403,17 +416,17 @@ q = st.text_input("Search athletes or gyms", value="", label_visibility="collaps
 
 levels = ["All"] + _list_distinct(int(meet["id"]), "level")
 divisions = ["All"] + _list_distinct(int(meet["id"]), "division")
-f1, f2 = st.columns(2)
+f1, f2, f3 = st.columns([1.0, 1.35, 0.9])
 with f1:
     level = st.selectbox("Level", levels, index=0)
 with f2:
     division = st.selectbox("Division", divisions, index=0)
+with f3:
+    auto = st.checkbox("Auto (20s)", value=True)
 
 event = st.radio("Event", EVENTS, index=EVENTS.index("AA"), horizontal=True, label_visibility="collapsed")
 
 st.markdown("</div></div>", unsafe_allow_html=True)
-
-auto = st.checkbox("Auto-refresh (20s)", value=True)
 if auto:
     st_autorefresh(interval=20_000, key="auto_refresh_20s")
 
