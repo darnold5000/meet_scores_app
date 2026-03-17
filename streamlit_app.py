@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from datetime import datetime
+from textwrap import dedent
 
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
@@ -461,16 +462,17 @@ for idx, c in enumerate(cards_sorted, start=1):
     for ev in EVENTS:
         e = c[ev]
         sel = " sel" if ev == event else ""
+        # Important: keep tags unindented so Streamlit doesn't treat this as a Markdown code block.
         html += f"""
-    <div class="gs-pill{sel}">
-      <div class="gs-pill-ev">{ev}</div>
-      <div class="gs-pill-score">{_fmt_score(e.get("score"))}</div>
-      <div class="gs-pill-place">{_fmt_place(e.get("place"))}</div>
-    </div>
+<div class="gs-pill{sel}">
+  <div class="gs-pill-ev">{ev}</div>
+  <div class="gs-pill-score">{_fmt_score(e.get("score"))}</div>
+  <div class="gs-pill-place">{_fmt_place(e.get("place"))}</div>
+</div>
 """
     html += """
   </div>
 </div>
 """
-    st.markdown(html, unsafe_allow_html=True)
+    st.markdown(dedent(html).strip(), unsafe_allow_html=True)
 
