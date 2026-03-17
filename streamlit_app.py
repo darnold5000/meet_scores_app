@@ -140,7 +140,7 @@ with col3:
     divisions = ["All"] + _list_distinct(int(meet["id"]), "division")
     division = st.selectbox("Division", divisions, index=0)
 
-auto = st.toggle("Auto-refresh (20s)", value=True)
+auto = st.checkbox("Auto-refresh (20s)", value=True)
 if auto:
     st_autorefresh(interval=20_000, key="auto_refresh_20s")
 
