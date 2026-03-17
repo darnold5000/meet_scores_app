@@ -149,7 +149,7 @@ st.caption(f"{len(cards)} athletes")
 
 for c in cards:
     aa = c["AA"]
-    with st.container(border=True):
+    with st.container():
         top = st.columns([3, 1])
         with top[0]:
             st.markdown(f"**{c['athlete']}**  \n{c['gym']}  \n`{c['level']}` · `{c['division']}`")
