@@ -6,7 +6,6 @@ from textwrap import dedent
 
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
-import pandas as pd
 
 from gym_scores.db import fetch_all, fetch_one
 
@@ -366,6 +365,69 @@ st.markdown(
     font-size: 0.88rem;
     margin: 2px 0 8px 0;
   }
+
+  /* List/table view (HTML, no Arrow) */
+  .gs-table{
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 12px 30px rgba(2,6,23,0.06);
+  }
+  .gs-table thead th{
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: rgba(244,246,249,0.98);
+    color: var(--muted);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    text-align: left;
+    padding: 10px 10px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .gs-table tbody td{
+    padding: 9px 10px;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+    font-size: 0.9rem;
+    color: var(--text);
+    vertical-align: top;
+    white-space: nowrap;
+  }
+  .gs-table tbody tr:last-child td{ border-bottom: none; }
+  .gs-table .muted{ color: var(--muted); font-weight: 700; font-size: 0.82rem; }
+  .gs-table .rank{
+    width: 40px;
+    font-weight: 950;
+    color: var(--accent);
+  }
+  .gs-table .ath{
+    font-weight: 950;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .gs-table .gym{
+    color: var(--accent);
+    font-weight: 850;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .gs-table .scorecol{
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    width: 88px;
+  }
+  .gs-table-wrap{
+    max-height: 70vh;
+    overflow: auto;
+    border-radius: var(--radius);
+  }
 </style>
 """,
     unsafe_allow_html=True,
@@ -431,32 +493,40 @@ def _event_sort_key(c: dict) -> tuple:
 cards_sorted = sorted(cards, key=_event_sort_key)
 
 if view == "List":
-    rows: list[dict] = []
+    # Render as HTML to avoid Arrow serialization issues on some Streamlit Cloud frontends.
+    def _cell(text: str) -> str:
+        return (
+            str(text)
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace('"', "&quot;")
+        )
+
+    headers = ["#", "Athlete", "Gym", "Lvl", "Div"] + EVENTS
+    html = '<div class="gs-table-wrap"><table class="gs-table"><thead><tr>'
+    for h in headers:
+        cls = "scorecol" if h in EVENTS else ""
+        html += f'<th class="{cls}">{_cell(h)}</th>'
+    html += "</tr></thead><tbody>"
+
     for idx, c in enumerate(cards_sorted, start=1):
-        row = {
-            "Rank": idx,
-            "Athlete": c["athlete"],
-            "Gym": c["gym"],
-            "Level": c["level"] or "",
-            "Division": c["division"] or "",
-        }
+        html += "<tr>"
+        html += f'<td class="rank">{idx}</td>'
+        html += f'<td class="ath">{_cell(c["athlete"])}</td>'
+        html += f'<td class="gym">{_cell(c["gym"])}</td>'
+        html += f'<td class="muted">{_cell(c["level"] or "—")}</td>'
+        html += f'<td class="muted">{_cell(c["division"] or "—")}</td>'
         for ev in EVENTS:
             e = c[ev]
             s = _fmt_score(e.get("score"))
             p = _fmt_place(e.get("place"))
-            row[ev] = f"{s} {p}".strip()
-        rows.append(row)
+            val = f"{s} {p}".strip()
+            html += f'<td class="scorecol">{_cell(val)}</td>'
+        html += "</tr>"
 
-    df = pd.DataFrame(rows)
-    # Streamlit uses Arrow for dataframes; some deployments choke on Arrow string types like LargeUtf8.
-    # Force plain Python objects/strings for broad frontend compatibility.
-    safe = df.copy()
-    for col in safe.columns:
-        if col == "Rank":
-            continue
-        safe[col] = safe[col].map(lambda v: "" if v is None else str(v))
-    safe = safe.reset_index(drop=True)
-    st.dataframe(safe, use_container_width=True, height=650)
+    html += "</tbody></table></div>"
+    st.markdown(html, unsafe_allow_html=True)
 else:
     for idx, c in enumerate(cards_sorted, start=1):
         e_sel = c[event]
