@@ -448,7 +448,14 @@ if view == "List":
         rows.append(row)
 
     df = pd.DataFrame(rows)
-    st.dataframe(df, use_container_width=True, hide_index=True, height=650)
+    # `hide_index` isn't supported in all Streamlit versions (notably some Streamlit Cloud images).
+    # Use a Styler when available for broad compatibility.
+    table = df
+    try:
+        table = df.style.hide(axis="index")  # pandas >= 1.4
+    except Exception:
+        pass
+    st.dataframe(table, use_container_width=True, height=650)
 else:
     for idx, c in enumerate(cards_sorted, start=1):
         e_sel = c[event]
